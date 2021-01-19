@@ -9,6 +9,7 @@ import com.gsy.crm.utils.ServiceFactory;
 import com.gsy.crm.utils.UUIDUtil;
 import com.gsy.crm.workbench.domain.Activity;
 import com.gsy.crm.workbench.domain.Clue;
+import com.gsy.crm.workbench.domain.Tran;
 import com.gsy.crm.workbench.service.ActivityService;
 import com.gsy.crm.workbench.service.ClueService;
 import com.gsy.crm.workbench.service.impl.ActivityServiceImpl;
@@ -19,7 +20,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ClueController extends HttpServlet {
 
@@ -41,8 +44,103 @@ public class ClueController extends HttpServlet {
             getActivityListByClueId(request,response);
         }else if("/workbench/clue/unbund.do".equals(path)){
             unbund(request,response);
+        }else if("/workbench/clue/getActivityListByNameAndNotByClueId.do".equals(path)){
+            getActivityListByNameAndNotByClueId(request,response);
+        }else if("/workbench/clue/bund.do".equals(path)){
+            bund(request,response);
+        }else if("/workbench/clue/getActivityListByName.do".equals(path)){
+            getActivityListByName(request,response);
+        }else if("/workbench/clue/convert.do".equals(path)){
+            convert(request,response);
         }
 
+    }
+
+    private void convert(HttpServletRequest request, HttpServletResponse response) throws IOException {
+
+        System.out.println("执行线索转换的操作");
+
+        String clueId = request.getParameter("clueId");
+
+        //接收是否需要创建交易的标记
+        String flag = request.getParameter("flag");
+
+        String createBy = ((User)request.getSession().getAttribute("user")).getName();
+        Tran t = null;
+
+        if ("a".equals(flag)){
+            t = new Tran();
+            //接收交易表中的参数
+            String money = request.getParameter("money");
+            String name = request.getParameter("name");
+            String stage = request.getParameter("stage");
+            String expectedDate = request.getParameter("expectedDate");
+            String activityId = request.getParameter("activityId");
+            String id = UUIDUtil.getUUID();
+            String createTime = DateTimeUtil.getSysTime();
+
+
+            t.setActivityId(activityId);
+            t.setMoney(money);
+            t.setName(name);
+            t.setStage(stage);
+            t.setExpectedDate(expectedDate);
+            t.setId(id);
+            t.setCreateTime(createTime);
+            t.setCreateBy(createBy);
+        }
+
+        ClueService cs = (ClueService) ServiceFactory.getService(new ClueServiceImpl());
+        boolean flag1 = cs.convert(clueId,t,createBy);
+
+        if (flag1){
+            response.sendRedirect(request.getContextPath()+"/workbench/clue/index.jsp");
+        }
+    }
+
+    private void getActivityListByName(HttpServletRequest request, HttpServletResponse response) {
+
+        System.out.println("执行搜索市场列表的操作（根据名称模糊查）");
+
+        String aname = request.getParameter("aname");
+
+        ActivityService as = (ActivityService) ServiceFactory.getService(new ActivityServiceImpl());
+        List<Activity> aList = as.getActivityListByName(aname);
+
+        PrintJson.printJsonObj(response,aList);
+
+
+    }
+
+    private void bund(HttpServletRequest request, HttpServletResponse response) {
+
+        System.out.println("执行关联市场活动的操作");
+
+        String[] aids = request.getParameterValues("aid");
+
+
+        String cid = request.getParameter("cid");
+
+        ClueService cs = (ClueService) ServiceFactory.getService(new ClueServiceImpl());
+        boolean flag = cs.bund(cid,aids);
+
+        PrintJson.printJsonFlag(response,flag);
+    }
+
+    private void getActivityListByNameAndNotByClueId(HttpServletRequest request, HttpServletResponse response) {
+
+        System.out.println("查询市场活动列表（根据名称模糊查+排除已经关联的）");
+
+        String aname = request.getParameter("aname");
+        String clueId = request.getParameter("clueId");
+        Map<String,String> map = new HashMap<>();
+        map.put("aname",aname);
+        map.put("clueId",clueId);
+
+        ActivityService as = (ActivityService) ServiceFactory.getService(new ActivityServiceImpl());
+        List<Activity> aList = as.getActivityListByNameAndNotByClueId(map);
+
+        PrintJson.printJsonObj(response,aList);
     }
 
     private void unbund(HttpServletRequest request, HttpServletResponse response) {

@@ -55,6 +55,85 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 		//页面加载完毕后，取出关联的市场活动信息列表
 		showActivityList();
 
+		//为关联市场活动模态窗口中的搜索框绑定事件，通过触发回车键，查询并展现市场活动列表
+		$("#aname").keydown(function (event) {
+
+			if (event.keyCode==13){
+				//alert(1)
+				$.ajax({
+					url:"workbench/clue/getActivityListByNameAndNotByClueId.do",
+					data:{
+						"aname":$.trim($("#aname").val()),
+						"clueId":"${requestScope.clue.id}"
+					},
+					dataType:"json",
+					type:"get",
+					success:function (data) {
+
+						var html = "";
+						$.each(data,function (i,n) {
+
+							html += '<tr>'
+							html += '<td><input type="checkbox" name="xz" value="'+n.id+'"/></td>'
+							html += '<td>'+n.name+'</td>'
+							html += '<td>'+n.startDate+'</td>'
+							html += '<td>'+n.endDate+'</td>'
+							html += '<td>'+n.owner+'</td>'
+							html += '</tr>'
+
+
+						})
+						$("#activitySearchBody").html(html);
+					}
+				})
+
+				//展现完列表后，将模态窗口默认的回车行为禁用
+				return false
+			}
+
+		})
+
+		//为关联按钮绑定事件，执行关联表的添加操作
+		$("#bundBtn").click(function () {
+
+			var $xz = $("input[name=xz]:checked")
+			if ($xz.length==0){
+				alert("请选择需要关联的活动")
+			}else{
+				var param = "cid=${requestScope.clue.id}&";
+
+				for (var i=0;i<$xz.length;i++){
+					param += "aid="+$($xz[i]).val()+"&";
+				}
+
+				param = param.substring(0,param.length-1)
+
+			}
+			$.ajax({
+				url:"workbench/clue/bund.do",
+				data:param,
+				type:"post",
+				dataType:"json",
+				success:function (data) {
+
+					if (data.success){
+						//关联成功
+						//刷新页面
+						showActivityList();
+						//清除搜索框的信息 清楚复选框选中状态 清空activitySearchBody中的内容
+
+
+						//关闭模态窗口
+						$("#bundModal").modal("hide")
+					}else {
+						alert("关联市场活动失败")
+					}
+
+				}
+			})
+
+		})
+
 	});
 
 	function showActivityList() {
@@ -130,7 +209,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 					<div class="btn-group" style="position: relative; top: 18%; left: 8px;">
 						<form class="form-inline" role="form">
 						  <div class="form-group has-feedback">
-						    <input type="text" class="form-control" style="width: 300px;" placeholder="请输入市场活动名称，支持模糊查询">
+						    <input type="text" class="form-control" id="aname" style="width: 300px;" placeholder="请输入市场活动名称，支持模糊查询">
 						    <span class="glyphicon glyphicon-search form-control-feedback"></span>
 						  </div>
 						</form>
@@ -146,8 +225,8 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 								<td></td>
 							</tr>
 						</thead>
-						<tbody>
-							<tr>
+						<tbody id="activitySearchBody">
+							<%--<tr>
 								<td><input type="checkbox"/></td>
 								<td>发传单</td>
 								<td>2020-10-10</td>
@@ -160,13 +239,13 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 								<td>2020-10-10</td>
 								<td>2020-10-20</td>
 								<td>zhangsan</td>
-							</tr>
+							</tr>--%>
 						</tbody>
 					</table>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-					<button type="button" class="btn btn-primary" data-dismiss="modal">关联</button>
+					<button type="button" class="btn btn-primary" id="bundBtn">关联</button>
 				</div>
 			</div>
 		</div>
@@ -339,7 +418,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 			<h3>${requestScope.clue.fullname}${requestScope.clue.appellation} <small>${requestScope.clue.company}</small></h3>
 		</div>
 		<div style="position: relative; height: 50px; width: 500px;  top: -72px; left: 700px;">
-			<button type="button" class="btn btn-default" onclick="window.location.href='workbench/clue/convert.jsp';"><span class="glyphicon glyphicon-retweet"></span> 转换</button>
+			<button type="button" class="btn btn-default" onclick="window.location.href='workbench/clue/convert.jsp?id=${requestScope.clue.id}&fullname=${requestScope.clue.fullname}&appellation=${requestScope.clue.appellation}&company=${requestScope.clue.company}&owner=${requestScope.clue.owner}';"><span class="glyphicon glyphicon-retweet"></span> 转换</button>
 			<button type="button" class="btn btn-default" data-toggle="modal" data-target="#editClueModal"><span class="glyphicon glyphicon-edit"></span> 编辑</button>
 			<button type="button" class="btn btn-danger"><span class="glyphicon glyphicon-minus"></span> 删除</button>
 		</div>

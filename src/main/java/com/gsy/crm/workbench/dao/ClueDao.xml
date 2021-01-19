@@ -80,6 +80,15 @@
         on c.owner = u.id
         where c.id = #{id}
     </select>
+
+    <select id="getClueById" resultType="Clue">
+        select * from tbl_clue where id=#{clueId}
+    </select>
+
+    <delete id="delete">
+        delete from tbl_clue where id=#{clueId}
+    </delete>
+
 </mapper>
 
 
