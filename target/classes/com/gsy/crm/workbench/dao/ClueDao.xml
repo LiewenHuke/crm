@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.gsy.crm.workbench.dao.ClueDao">
+	
+	<insert id="save">
+        insert into tbl_clue(
+
+            id,
+            fullname,
+            appellation,
+            owner,
+            company,
+            job,
+            email,
+            phone,
+            website,
+            mphone,
+            state,
+            source,
+            createBy,
+            createTime,
+            description,
+            contactSummary,
+            nextContactTime,
+            address
+
+        )values (
+
+            #{id},
+            #{fullname},
+            #{appellation},
+            #{owner},
+            #{company},
+            #{job},
+            #{email},
+            #{phone},
+            #{website},
+            #{mphone},
+            #{state},
+            #{source},
+            #{createBy},
+            #{createTime},
+            #{description},
+            #{contactSummary},
+            #{nextContactTime},
+            #{address}
+
+        )
+    </insert>
+
+    <select id="getById" resultType="com.gsy.crm.workbench.domain.Clue">
+        select
+
+            c.id as id,
+            c.fullname as fullname,
+            c.appellation appellation,
+            u.name as owner,
+            c.company company,
+            c.job job,
+            c.email email,
+            c.phone phone,
+            c.website website,
+            c.mphone mphone,
+            c.state state,
+            c.source source,
+            c.createBy createBy,
+            c.createTime createTime,
+            c.editBy editBy,
+            c.editTime editTime,
+            c.description description,
+            c.contactSummary contactSummary,
+            c.nextContactTime nextContactTime,
+            c.address address
+
+        from tbl_clue c
+        join tbl_user u
+        on c.owner = u.id
+        where c.id = #{id}
+    </select>
+
+    <select id="getClueById" resultType="Clue">
+        select * from tbl_clue where id=#{clueId}
+    </select>
+
+    <delete id="delete">
+        delete from tbl_clue where id=#{clueId}
+    </delete>
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
